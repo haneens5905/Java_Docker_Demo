@@ -1,0 +1,28 @@
+# Maven / Java
+/target/
+*.class
+*.jar
+
+# Logs
+*.log
+
+# IntelliJ
+/.idea/
+/*.iml
+
+# VSCode
+.vscode/
+
+# Mac / Linux system files
+.DS_Store
+*.swp
+
+# Docker
+docker-compose.override.yml
+
+# Recovered artifacts
+recovered-app.jar
+decompiled-src/
+
+# temporary files
+*.tmp
