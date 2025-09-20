@@ -197,8 +197,17 @@ docker rmi -f java-docker-demo
 -   **Empty decompiled output** → Ensure you used the correct jar
     (recovered-app.jar).
 
+    
 ------------------------------------------------------------------------
 
+##  References
+
+-   [Docker Docs](https://docs.docker.com/)\
+-   [jd-cli Decompiler](https://github.com/kwart/jd-cli)\
+-   [Maven Docs](https://maven.apache.org/)
+
+
+------------------------------------------------------------------------
 
 ##  License
 
@@ -229,8 +238,3 @@ SOFTWARE.
 
 ------------------------------------------------------------------------
 
-##  Credits / References
-
--   [Docker Docs](https://docs.docker.com/)\
--   [jd-cli Decompiler](https://github.com/kwart/jd-cli)\
--   [Maven Docs](https://maven.apache.org/)
