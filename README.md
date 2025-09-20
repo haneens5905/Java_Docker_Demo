@@ -13,11 +13,11 @@ images lightweight, and how reverse-engineering JARs can be performed.
 ##  Learning Outcomes
 
 -   How to use **multi-stage Docker builds** to separate build and
-    runtime environments.\
--   How to extract artifacts (e.g., JAR files) from Docker containers.\
--   How to decompile Java bytecode back into human-readable source.\
+    runtime environments.
+-   How to extract artifacts (e.g., JAR files) from Docker containers.
+-   How to decompile Java bytecode back into human-readable source.
 -   Understand the difference between running an app inside Docker
-    vs. on the host.\
+    vs. on the host.
 -   Practice best practices in Docker image building.
 
 ------------------------------------------------------------------------
@@ -26,12 +26,12 @@ images lightweight, and how reverse-engineering JARs can be performed.
 
 Before running the project, ensure you have the following installed:
 
--   **Java 17** (JDK)\
--   **Docker** (20.x or newer recommended)\
--   **Maven** (3.6+ recommended)\
+-   **Java 17** (JDK)
+-   **Docker** (20.x or newer recommended)
+-   **Maven** (3.6+ recommended)
 -   **jd-cli** (Java decompiler) --- included in this repo for
     convenience, but you can also [download it
-    here](https://github.com/kwart/jd-cli).\
+    here](https://github.com/kwart/jd-cli).
 -   A Unix-like environment (Linux/macOS). Windows should work too but
     commands may differ slightly.
 
@@ -69,8 +69,12 @@ java -jar target/app.jar
 ```
 
 Expected output:
-
-    Running inside: host JVM
+```
+Hello, World
+Time now: 2025-08-19T16:05:54.323079391
+Java version: 17.0.16
+Running inside: host JVM
+```
 
 ------------------------------------------------------------------------
 
@@ -124,15 +128,19 @@ Running inside: Docker container
     java -jar recovered-app.jar
     ```
 
-    Expected output:
-
-        Running inside: host JVM (recovered JAR)
+Expected output:
+```
+Hello, World
+Time now: 2025-08-19T16:05:54.323079391
+Java version: 17.0.16
+Running inside: host JVM
+```
 
 ------------------------------------------------------------------------
 
 ##  Decompiling the JAR
 
-1.  Extract jd-cli (already bundled or download from official repo).\
+1.  Extract jd-cli (already bundled or download from official repo).
 
 2.  Run:
 
@@ -182,10 +190,10 @@ docker rmi -f java-docker-demo
 ##  Troubleshooting / Common Issues
 
 -   **Docker not found** → Ensure Docker is installed and running
-    (`docker ps` works).\
+    (`docker ps` works).
 -   **Permission denied** → Run Docker with `sudo` or add your user to
-    the `docker` group.\
--   **Maven not found** → Install Maven if building locally.\
+    the `docker` group.
+-   **Maven not found** → Install Maven if building locally.
 -   **Empty decompiled output** → Ensure you used the correct jar
     (recovered-app.jar).
 
