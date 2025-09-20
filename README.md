@@ -1,60 +1,91 @@
 # Java Docker Demo
 
-This project demonstrates how to containerize, run, and reverse-engineer a simple Java application using Docker.  
-It covers building images, running containers, extracting artifacts, and decompiling JAR files.
+##  Description
 
----
+This project demonstrates how to containerize a simple Java application
+using **multi-stage Docker builds** and then explore concepts like
+extracting and decompiling the built JAR. It is primarily for learning
+purposes --- to understand how Docker works with Java, how to keep
+images lightweight, and how reverse-engineering JARs can be performed.
 
-##  Project Overview
+------------------------------------------------------------------------
 
-The project includes:
+##  Learning Outcomes
 
-- A simple **Java application** (`App.java`) that prints:
-  - "Hello, World"
-  - Current timestamp
-  - Java version
-  - Execution environment (Host JVM or Docker container)
-- A **multi-stage Dockerfile** that:
-  1. Compiles the Java code into a JAR file.
-  2. Copies only the JAR into a lightweight image for execution.
-- Steps to:
-  - Run the container.
-  - Recover the JAR file from the container.
-  - Decompile the JAR to retrieve readable Java source code.
+-   How to use **multi-stage Docker builds** to separate build and
+    runtime environments.\
+-   How to extract artifacts (e.g., JAR files) from Docker containers.\
+-   How to decompile Java bytecode back into human-readable source.\
+-   Understand the difference between running an app inside Docker
+    vs. on the host.\
+-   Practice best practices in Docker image building.
 
-This exercise demonstrates concepts of **Docker image layering, multi-stage builds, and reverse engineering.**
+------------------------------------------------------------------------
 
----
+##  Prerequisites
+
+Before running the project, ensure you have the following installed:
+
+-   **Java 17** (JDK)\
+-   **Docker** (20.x or newer recommended)\
+-   **Maven** (3.6+ recommended)\
+-   **jd-cli** (Java decompiler) --- included in this repo for
+    convenience, but you can also [download it
+    here](https://github.com/kwart/jd-cli).\
+-   A Unix-like environment (Linux/macOS). Windows should work too but
+    commands may differ slightly.
+
+------------------------------------------------------------------------
 
 ##  Project Structure
 
-```bash
-java-docker-demo/
-├── Dockerfile
-├── App.java              # Original Java source
-├── app.jar               # Packaged Java application (output)
-├── recovered-app.jar     # Extracted JAR from Docker container
-├── decompiled-src/       # Decompiled Java source files
-│   ├── com/haneen/App.java
-│   └── META-INF/...
-└── README.md
+    Java_Docker_Demo/
+    │── Dockerfile
+    │── pom.xml
+    │── src/main/java/com/example/App.java
+    │── jd-cli-1.2.0-dist.tar.gz   # Decompiler (bundled)
+    │── LICENSE
+    │── recovered-app.jar          # Extracted jar (artifact)
+    │── app.jar                    # Build artifact (should be ignored in production)
+
+------------------------------------------------------------------------
+
+##  Setup Instructions
+
+### 1. Clone the repository
+
+``` bash
+git clone https://github.com/haneens5905/Java_Docker_Demo.git
+cd Java_Docker_Demo
 ```
 
----
+### 2. Build and Run Locally (without Docker)
 
-##  Commands & Steps
+If you want to compile and run the app directly:
 
-### 1. Compile and Package the Application
-If not already built, package the app into a `.jar` (done automatically in Dockerfile build stage).
-
-### 2. Build the Docker Image
-```bash
-docker build -t hello-docker:1.0 .
+``` bash
+mvn clean package
+java -jar target/app.jar
 ```
 
-### 3. Run the Container
-```bash
-docker run --rm hello-docker:1.0
+Expected output:
+
+    Running inside: host JVM
+
+------------------------------------------------------------------------
+
+##  Building and Running with Docker
+
+### 1. Build the Docker Image
+
+``` bash
+docker build -t java-docker-demo .
+```
+
+### 2. Run the Container
+
+``` bash
+docker run --rm java-docker-demo
 ```
 
 Expected output:
@@ -65,59 +96,101 @@ Java version: 17.0.16
 Running inside: Docker container
 ```
 
-### 4. List Images
-```bash
-docker images
+------------------------------------------------------------------------
+
+##  Extracting the Built JAR from Docker
+
+1.  Run the container in the background:
+
+    ``` bash
+    docker run --name java-demo -d java-docker-demo
+    ```
+
+2.  Copy the JAR from the container:
+
+    ``` bash
+    docker cp java-demo:/app/app.jar ./recovered-app.jar
+    ```
+
+3.  Stop and remove the container:
+
+    ``` bash
+    docker rm -f java-demo
+    ```
+
+4.  Run the recovered JAR on the host:
+
+    ``` bash
+    java -jar recovered-app.jar
+    ```
+
+    Expected output:
+
+        Running inside: host JVM (recovered JAR)
+
+------------------------------------------------------------------------
+
+##  Decompiling the JAR
+
+1.  Extract jd-cli (already bundled or download from official repo).\
+
+2.  Run:
+
+    ``` bash
+    java -jar jd-cli-1.2.0-dist/jd-cli.jar recovered-app.jar -od decompiled
+    ```
+
+3.  View the decompiled source under the `decompiled/` folder.
+
+Example recovered code:
+
+``` java
+package com.haneen;
+
+import java.time.LocalDateTime;
+
+public class App {
+  public static void main(String[] args) {
+    String name = System.getenv().getOrDefault("NAME", "World");
+    System.out.println("Hello, " + name);
+    System.out.println("Time now: " + LocalDateTime.now());
+    System.out.println("Java version: " + System.getProperty("java.version"));
+    String insideDocker = System.getenv("RUNNING_IN_CONTAINER");
+    if ("true".equalsIgnoreCase(insideDocker)) {
+      System.out.println("Running inside: Docker container");
+    } else {
+      System.out.println("Running inside: Host JVM");
+    } 
+  }
+}
+
 ```
 
-### 5. Extract the JAR from Container
-```bash
-cid=$(docker create hello-docker:1.0)
-docker cp "$cid":/app/app.jar ./recovered-app.jar
-docker rm "$cid"
+------------------------------------------------------------------------
+
+##  Cleaning Up
+
+Remove unused containers/images to free space:
+
+``` bash
+docker rm -f $(docker ps -aq)
+docker rmi -f java-docker-demo
 ```
 
-### 6. Run the Recovered JAR on Host
-```bash
-java -jar recovered-app.jar
-```
+------------------------------------------------------------------------
 
-Output shows execution on **host JVM** instead of Docker.
+##  Troubleshooting / Common Issues
 
-### 7. Decompile the JAR
-- Download [jd-cli](https://github.com/kwart/jd-cli/releases).  
-- Extract it:
-  ```bash
-  tar -xvzf jd-cli-1.2.0-dist.tar.gz
-  ```
-- Run decompiler:
-  ```bash
-  mkdir decompiled-src
-  java -jar jd-cli.jar recovered-app.jar -od decompiled-src
-  ```
+-   **Docker not found** → Ensure Docker is installed and running
+    (`docker ps` works).\
+-   **Permission denied** → Run Docker with `sudo` or add your user to
+    the `docker` group.\
+-   **Maven not found** → Install Maven if building locally.\
+-   **Empty decompiled output** → Ensure you used the correct jar
+    (recovered-app.jar).
 
-Decompiled files will be saved under `decompiled-src/`.
+------------------------------------------------------------------------
 
----
-
-##  Tools Used
-
-- **Java 17** – Programming language
-- **Docker** – Containerization
-- **jd-cli** – Java bytecode decompiler
-
----
-
-##  Learning Outcomes
-
-Through this project, we learned:
-
-- How to use **multi-stage Docker builds** to keep images lightweight.
-- How to run Java applications inside Docker containers.
-- How to **extract and decompile JARs** to recover source code.
-- How Docker isolates environments but allows recovery of built artifacts.
-
----
 
 ##  License
 
@@ -145,6 +218,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
 
----
+------------------------------------------------------------------------
+
+##  Credits / References
+
+-   [Docker Docs](https://docs.docker.com/)\
+-   [jd-cli Decompiler](https://github.com/kwart/jd-cli)\
+-   [Maven Docs](https://maven.apache.org/)
